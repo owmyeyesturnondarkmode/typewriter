@@ -1,5 +1,5 @@
 Package: typewriter
-Version: 1.0
+Version: 1.0.0
 Depends: python3
 Architecture: all
 Maintainer: Jonathan Vacek <jonathanjames1941@outlook.com>
