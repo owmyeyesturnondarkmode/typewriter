@@ -38,6 +38,20 @@ class Typewriter(Adw.Application):
         GLib.set_application_name("Typewriter")
         self.window = None
         self.text_view = None
+        self.file_chooser = None
+        self.current_file = None
+        self.document_title = "untitled — Typewriter"
+        self.is_dirty = False
+
+        open_action = Gio.SimpleAction.new("open", None)
+        open_action.connect("activate", lambda *_args: self.open_file(None))
+        self.add_action(open_action)
+        self.set_accels_for_action("app.open", ["<Primary>o"])
+
+        save_action = Gio.SimpleAction.new("save", None)
+        save_action.connect("activate", lambda *_args: self.save_file(None))
+        self.add_action(save_action)
+        self.set_accels_for_action("app.save", ["<Primary>s"])
 
     def _show_editor(self, editor_content="", title="Typewriter"):
         Adw.StyleManager.get_default().set_color_scheme(
@@ -58,10 +72,12 @@ class Typewriter(Adw.Application):
 
         open_button = Gtk.Button.new_from_icon_name("document-open-symbolic")
         open_button.set_tooltip_text("Open")
+        open_button.connect("clicked", self.open_file)
         header_bar.pack_start(open_button)
 
         save_button = Gtk.Button.new_from_icon_name("document-save-symbolic")
         save_button.set_tooltip_text("Save")
+        save_button.connect("clicked", self.save_file)
         header_bar.pack_end(save_button)
 
         self.window.set_titlebar(header_bar)
@@ -70,10 +86,23 @@ class Typewriter(Adw.Application):
         scroller.set_child(self.text_view)
         self.window.set_child(scroller)
 
-        self.text_view.get_buffer().set_text(editor_content)
-        self.window.set_title(title)
+        self.document_title = title
+        buffer = self.text_view.get_buffer()
+        buffer.connect("changed", self._on_buffer_changed)
+        buffer.set_text(editor_content)
+        self.is_dirty = False
+        self._update_window_title()
         self.window.present()
         return self.window
+
+    def _on_buffer_changed(self, _buffer):
+        self.is_dirty = True
+        self._update_window_title()
+
+    def _update_window_title(self):
+        if self.window is not None:
+            marker = "*" if self.is_dirty else ""
+            self.window.set_title(f"{marker}{self.document_title}")
 
     def do_activate(self):
         self._show_editor(title="untitled — Typewriter")
@@ -87,7 +116,80 @@ class Typewriter(Adw.Application):
             print(f"Could not open file: {error}")
             return
 
+        self.current_file = file
         self._show_editor(text, f"{file.get_basename()} — Typewriter")
+
+    def open_file(self, _button):
+        self.file_chooser = Gtk.FileChooserNative.new(
+            "Open File",
+            self.window,
+            Gtk.FileChooserAction.OPEN,
+            "_Open",
+            "_Cancel",
+        )
+        self.file_chooser.connect("response", self._on_open_response)
+        self.file_chooser.show()
+
+    def save_file(self, _button):
+        if self.current_file is not None:
+            self._write_current_file()
+            return
+
+        self.file_chooser = Gtk.FileChooserNative.new(
+            "Save File",
+            self.window,
+            Gtk.FileChooserAction.SAVE,
+            "_Save",
+            "_Cancel",
+        )
+        self.file_chooser.set_current_name("untitled.txt")
+        self.file_chooser.connect("response", self._on_save_response)
+        self.file_chooser.show()
+
+    def _write_current_file(self):
+        buffer = self.text_view.get_buffer()
+        contents = buffer.get_text(
+            buffer.get_start_iter(), buffer.get_end_iter(), True
+        ).encode("utf-8")
+        try:
+            self.current_file.replace_contents(
+                contents, None, False, Gio.FileCreateFlags.NONE, None
+            )
+            self.is_dirty = False
+            self._update_window_title()
+            return True
+        except GLib.Error as error:
+            print(f"Could not save file: {error}")
+            return False
+
+    def _on_save_response(self, chooser, response):
+        if response == Gtk.ResponseType.ACCEPT:
+            self.current_file = chooser.get_file()
+            self.document_title = (
+                f"{self.current_file.get_basename()} — Typewriter"
+            )
+            self._write_current_file()
+            self._update_window_title()
+
+        chooser.destroy()
+        self.file_chooser = None
+
+    def _on_open_response(self, chooser, response):
+        if response == Gtk.ResponseType.ACCEPT:
+            file = chooser.get_file()
+            try:
+                _success, contents, _etag = file.load_contents(None)
+                text = contents.decode("utf-8")
+                self.current_file = file
+                self.document_title = f"{file.get_basename()} — Typewriter"
+                self.text_view.get_buffer().set_text(text)
+                self.is_dirty = False
+                self._update_window_title()
+            except (GLib.Error, UnicodeDecodeError) as error:
+                print(f"Could not open file: {error}")
+
+        chooser.destroy()
+        self.file_chooser = None
 
 app = Typewriter()
 app.run(sys.argv)
