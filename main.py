@@ -23,6 +23,7 @@ import sys
 import gi
 
 gi.require_version("Gtk", "4.0")
+gi.require_version("Adw", "1")
 
 from gi.repository import Gtk, Adw, GLib, Gio
 
@@ -39,24 +40,35 @@ class Typewriter(Adw.Application):
         self.text_view = None
 
     def _show_editor(self, editor_content="", title="Typewriter"):
-        if self.window is None:
-            Adw.StyleManager.get_default().set_color_scheme(
-                Adw.ColorScheme.FORCE_LIGHT
-            )
+        Adw.StyleManager.get_default().set_color_scheme(
+            Adw.ColorScheme.FORCE_LIGHT
+        )
 
-            self.window = Gtk.ApplicationWindow(
-                application=self, title="Typewriter"
-            )
-            self.window.set_default_size(800, 600)
+        self.window = Gtk.ApplicationWindow(
+            application=self, title="Typewriter"
+        )
+        self.window.set_default_size(800, 600)
 
-            self.text_view = Gtk.TextView()
-            self.text_view.set_left_margin(10)
-            self.text_view.set_top_margin(10)
-            self.text_view.set_bottom_margin(10)
+        self.text_view = Gtk.TextView()
+        self.text_view.set_left_margin(10)
+        self.text_view.set_top_margin(10)
+        self.text_view.set_bottom_margin(10)
 
-            scroller = Gtk.ScrolledWindow()
-            scroller.set_child(self.text_view)
-            self.window.set_child(scroller)
+        header_bar = Adw.HeaderBar()
+
+        open_button = Gtk.Button.new_from_icon_name("document-open-symbolic")
+        open_button.set_tooltip_text("Open")
+        header_bar.pack_start(open_button)
+
+        save_button = Gtk.Button.new_from_icon_name("document-save-symbolic")
+        save_button.set_tooltip_text("Save")
+        header_bar.pack_end(save_button)
+
+        self.window.set_titlebar(header_bar)
+
+        scroller = Gtk.ScrolledWindow()
+        scroller.set_child(self.text_view)
+        self.window.set_child(scroller)
 
         self.text_view.get_buffer().set_text(editor_content)
         self.window.set_title(title)
