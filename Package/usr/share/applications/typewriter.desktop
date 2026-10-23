@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Typewriter
+Icon=typewriter
+Type=Application
+Terminal=false
+Exec=/usr/bin/typewriter.py %f
+Categories=Utility;Development;
+Comment=A minimalist text editor.

@@ -1,0 +1,6 @@
+Package: typewriter
+Version: 1.0
+Depends: python3
+Architecture: all
+Maintainer: Jonathan Vacek <jonathanjames1941@outlook.com>
+Description: A minimalistic text editor.
