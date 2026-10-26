@@ -1,8 +1,0 @@
-[Desktop Entry]
-Name=Typewriter
-Icon=com.typewriter.Typewriter
-Type=Application
-Terminal=false
-Exec=typewriter %F
-Categories=Utility;Development;TextEditor;
-Comment=A minimalist text editor.

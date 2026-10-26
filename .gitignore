@@ -1,3 +1,5 @@
 gtktest.py
-
 *.deb
+repo
+*.flatpak
+.flatpak-builder
