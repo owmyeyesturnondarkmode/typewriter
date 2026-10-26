@@ -1,0 +1,23 @@
+app-id: com.typewriter.Typewriter
+runtime: org.gnome.Platform
+runtime-version: '51'
+sdk: org.gnome.Sdk
+command: typewriter
+
+finish-args:
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  - --share=ipc
+  - --talk-name=org.freedesktop.portal.*
+
+modules:
+  - name: typewriter
+    buildsystem: simple
+    build-commands:
+      - install -D -m 0755 main.py /app/bin/typewriter
+      - install -D -m 0644 com.typewriter.Typewriter.desktop /app/share/applications/com.typewriter.Typewriter.desktop
+      - install -D -m 0644 deb-package/usr/share/icons/hicolor/128x128/apps/typewriter.png /app/share/icons/hicolor/128x128/apps/com.typewriter.Typewriter.png
+    sources:
+      - type: dir
+        path: .
