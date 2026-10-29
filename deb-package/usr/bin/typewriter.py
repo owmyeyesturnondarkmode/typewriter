@@ -160,6 +160,7 @@ class Typewriter(Adw.Application):
             return True
         except GLib.Error as error:
             print(f"Could not save file: {error}")
+            self.notify("Error", f"Could not save file: {error}")
             return False
 
     def _on_save_response(self, chooser, response):
@@ -187,9 +188,15 @@ class Typewriter(Adw.Application):
                 self._update_window_title()
             except (GLib.Error, UnicodeDecodeError) as error:
                 print(f"Could not open file: {error}")
+                self.notify("Error", f"Could not open file: {error}")
+                self.text_view.get_buffer().set_text("Could not open file.")
 
         chooser.destroy()
         self.file_chooser = None
+    def notify(self, title, body):
+        notification = Gio.Notification.new(title)
+        notification.set_body(body)
+        self.send_notification(None, notification)
 
 app = Typewriter()
 app.run(sys.argv)
