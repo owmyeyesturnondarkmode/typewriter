@@ -29,7 +29,7 @@ single-architecture bundle:
 
 ```sh
 flatpak-builder --user --repo=repo --force-clean build-dir com.typewriter.Typewriter.yml
-flatpak build-bundle repo typewriter.flatpak com.typewriter.Typewriter
+flatpak build-bundle repo com.typewriter.Typewriter.flatpak com.typewriter.Typewriter
 ```
 
 The manifest grants display access and portal access for file open/save
